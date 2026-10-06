@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaste 1 Trilhão</title>
+<meta name="description" content="Você tem R$ 1 trilhão e 7 dias para gastar tudo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+
+    <!-- ===== MAPA EM TELA CHEIA ===== -->
+    <div id="mapWrap">
+      <div id="mapInner">
+        <img id="mapImg" src="mapa_mundi_em_branco.png" alt="" draggable="false">
+        <canvas id="mapCanvas"></canvas>
+        <svg id="mapSvg" viewBox="0 0 1793 877" preserveAspectRatio="none">
+          <defs>
+            <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#0b3b4a" flood-opacity=".22"/>
+            </filter>
+          </defs>
+          <g id="routeLayer"></g>
+          <g id="dotsLayer"></g>
+          <g id="markerLayer"></g>
+          <g id="fxLayer"></g>
+        </svg>
+      </div>
+    </div>
+    <div id="mapTip"></div>
+
+    <!-- ===== HUD FLUTUANTE ===== -->
+    <section id="timeBox" class="hud">
+      <div class="lbl">TEMPO RESTANTE</div>
+      <div id="timeValue" class="time-val">7 dias 0h</div>
+      <div id="dayPills" class="day-pills"></div>
+      <div id="urgency" class="urgency"></div>
+    </section>
+
+    <div id="locChip" class="hud"><span class="pin"></span><span>Você está em <b id="locName">Rio de Janeiro, Brasil</b></span></div>
+    <div id="banner"></div>
+
+    <section id="moneyBox" class="hud">
+      <div class="lbl">SEU DINHEIRO</div>
+      <div id="moneyValue" class="money-val">R$ 1.000.000.000.000</div>
+      <div class="money-sub"><span id="leftPct">100% restante</span><span class="dot">·</span><span id="spentValue">nada gasto ainda</span></div>
+      <canvas id="pile" width="760" height="300"></canvas>
+    </section>
+
+    <div id="zoomCtl" class="hud">
+      <button data-z="in" title="Aproximar">+</button>
+      <button data-z="out" title="Afastar">−</button>
+      <button data-z="reset" title="Visão mundial">↺</button>
+    </div>
+
+    <section id="historyBar" class="hud">
+      <div class="hist-title">ÚLTIMAS COMPRAS</div>
+      <div id="histChips"></div>
+      <button id="histAll" class="link-btn" type="button">VER TODAS →</button>
+    </section>
+
+    <!-- ===== CAIXA DE TEXTO (centro, embaixo) ===== -->
+    <form id="searchForm" autocomplete="off">
+      <ul id="suggest"></ul>
+      <div class="search-box">
+        <svg class="search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="searchInput" type="text" placeholder="O que você quer comprar?" spellcheck="false">
+        <button id="searchBtn" type="submit" aria-label="Pesquisar">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </form>
+
+    <!-- ===== MINI TELA DE CONFIRMAÇÃO ===== -->
+    <div id="modalBack" class="hidden"><div id="modal"></div></div>
+
+    <!-- ===== MOMENTO DO DINHEIRO ===== -->
+    <div id="moment" class="hidden">
+      <div class="mo-card">
+        <div class="mo-k" id="moK">VOCÊ GASTOU</div>
+        <div class="mo-v" id="moV">R$ 0</div>
+        <div class="mo-pile">
+          <canvas id="bigPile" width="1400" height="560"></canvas>
+          <div id="moLens" class="hidden">
+            <div class="lens-head">ZOOM EM 1 QUADRADINHO</div>
+            <div class="lens-sub">1 quadradinho = R$ 1 bilhão</div>
+            <canvas id="lensCv" width="360" height="360"></canvas>
+            <div id="lensCap" class="lens-cap"></div>
+          </div>
+        </div>
+        <div class="mo-r" id="moR"></div>
+        <div class="mo-next" id="moNext">clique para continuar ▸</div>
+      </div>
+    </div>
+
+    <div id="overlay" class="hidden"></div>
+    <canvas id="confetti"></canvas>
+  </div>
+</div>
+
+<div id="adminDock" class="hidden"></div>
+
+<script src="map-data.js"></script>
+<script src="data.js"></script>
+<script src="game.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
