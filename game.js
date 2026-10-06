@@ -324,7 +324,7 @@
   /*  Mapa em tela cheia                                                */
   /* ------------------------------------------------------------------ */
   let stageScale = 1;
-  const MW = M.w, MH = M.h, VW = 1920, VH = 1080, W0 = 1920, H0 = 1920 * M.h / M.w, KX = W0 / MW, KY = H0 / MH;
+  const MW = M.w, MH = M.h, SW = M.sw || M.w, SH = M.sh || M.h, RS = MW / SW, VW = 1920, VH = 1080, W0 = 1920, H0 = 1920 * SH / SW, KX = W0 / SW, KY = H0 / SH;
   const IDX = new Uint8Array(MW * MH);
   (function decode() { let p = 0; const r = M.rle; for (let i = 0; i < r.length; i += 2) { IDX.fill(r[i], p, p + r[i + 1]); p += r[i + 1]; } })();
   const CODES = M.codes;
@@ -352,14 +352,22 @@
   function pastelOf(code) { let h = 0; for (const ch of code) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PASTEL[h % PASTEL.length]; }
   let hoverCode = null, destCode = null;
   function paint(code, color) { const k = codeIndex[code]; if (!k) return; const L = PIX[k]; for (let i = 0; i < L.length; i++) buf32[L[i]] = color; }
+  let lastPainted = [];
   function renderMapColors() {
-    buf32.fill(0);
     const cur = cityOf(S.city).country;
-    S.visited.forEach(c => { if (c !== cur) paint(c, COL.visited); });
-    if (destCode && destCode !== cur) paint(destCode, COL.dest);
-    if (hoverCode && hoverCode !== cur) { const p = pastelOf(hoverCode); paint(hoverCode, rgba(p[0], p[1], p[2])); }
-    paint(cur, COL.current);
-    cx.putImageData(img, 0, 0);
+    const jobs = [];
+    S.visited.forEach(c => { if (c !== cur) jobs.push([c, COL.visited]); });
+    if (destCode && destCode !== cur) jobs.push([destCode, COL.dest]);
+    if (hoverCode && hoverCode !== cur) { const p = pastelOf(hoverCode); jobs.push([hoverCode, rgba(p[0], p[1], p[2])]); }
+    jobs.push([cur, COL.current]);
+    // limpa só o que foi pintado antes e atualiza só a área afetada (mapa em alta resolução)
+    const touched = new Set(lastPainted.concat(jobs.map(j => j[0])));
+    lastPainted.forEach(c => { const k = codeIndex[c]; if (k) { const L = PIX[k]; for (let i = 0; i < L.length; i++) buf32[L[i]] = 0; } });
+    jobs.forEach(([c, col]) => paint(c, col));
+    lastPainted = jobs.map(j => j[0]);
+    let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+    touched.forEach(c => { const k = codeIndex[c]; if (!k) return; const b = BOX[k]; if (b[2] < 0) return; x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[2]); y1 = Math.max(y1, b[3]); });
+    if (x1 >= 0) cx.putImageData(img, 0, 0, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
   }
 
   /* --- câmera --- */
@@ -417,13 +425,13 @@
     const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
     const x = Math.floor(fx * MW), y = Math.floor(fy * MH);
     const k = (x >= 0 && y >= 0 && x < MW && y < MH) ? IDX[y * MW + x] : 0;
-    return { code: k ? CODES[k - 1] : null, k, mx: fx * MW, my: fy * MH };
+    return { code: k ? CODES[k - 1] : null, k, mx: fx * SW, my: fy * SH };
   }
   wrap.addEventListener('dblclick', e => {
     if (busy) return;
     const h = codeAtEvent(e);
     if (h.code) {
-      const b = BOX[h.k], bw = (b[2] - b[0] + 1) * KX, bh = (b[3] - b[1] + 1) * KY;
+      const b = BOX[h.k].map(v => v / RS), bw = (b[2] - b[0] + 1) * KX, bh = (b[3] - b[1] + 1) * KY;
       const z = clamp(Math.min(VW / (bw * 2), VH / (bh * 2)), 1.6, ZMAX);
       animateView(viewOn((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, z), 700);
     } else animateView(viewOn(h.mx, h.my, Math.min(ZMAX, view.z * 1.6)), 600);
