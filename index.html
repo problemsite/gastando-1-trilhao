@@ -49,7 +49,10 @@
       <div class="lbl">SEU DINHEIRO</div>
       <div id="moneyValue" class="money-val">R$ 1.000.000.000.000</div>
       <div class="money-sub"><span id="leftPct">100% restante</span><span class="dot">·</span><span id="spentValue">nada gasto ainda</span></div>
-      <canvas id="pile" width="760" height="300"></canvas>
+      <div id="pileWrap">
+        <canvas id="pile" width="760" height="420"></canvas>
+        <div class="pile-cap">R$ 1 trilhão em notas de R$ 100 = um cubo de 22 m.<br>Cada bloco = R$ 1 bilhão. Você tem 1,75 m.</div>
+      </div>
     </section>
 
     <div id="zoomCtl" class="hud">
@@ -84,20 +87,26 @@
       <div class="mo-card">
         <div class="mo-k" id="moK">VOCÊ GASTOU</div>
         <div class="mo-v" id="moV">R$ 0</div>
-        <div class="mo-pile">
-          <canvas id="bigPile" width="1400" height="560"></canvas>
+        <div class="mo-row">
+          <div id="moArt"></div>
+          <div class="mo-pile">
+          <canvas id="bigPile" width="1520" height="1120"></canvas>
+          </div>
           <div id="moLens" class="hidden">
-            <div class="lens-head">ZOOM EM 1 QUADRADINHO</div>
-            <div class="lens-sub">1 quadradinho = R$ 1 bilhão</div>
+            <div class="lens-head">ZOOM EM 1 BLOCO</div>
+            <div class="lens-sub">1 bloco = R$ 1 bilhão · 2,2 m de altura</div>
             <canvas id="lensCv" width="360" height="360"></canvas>
             <div id="lensCap" class="lens-cap"></div>
           </div>
         </div>
         <div class="mo-r" id="moR"></div>
+        <div class="mo-cmp" id="moCmp"></div>
         <div class="mo-next" id="moNext">clique para continuar ▸</div>
       </div>
     </div>
 
+    <div id="vignette"></div>
+    <div id="milestone" class="hidden"><div class="ms-band"><div class="ms-k">MARCO</div><div class="ms-t" id="msT"></div><div class="ms-s" id="msS"></div><div class="ms-bar"><i id="msBar"></i></div></div></div>
     <div id="overlay" class="hidden"></div>
     <canvas id="confetti"></canvas>
   </div>
@@ -107,6 +116,8 @@
 
 <script src="map-data.js"></script>
 <script src="data.js"></script>
+<script src="art.js"></script>
+<script src="cube.js"></script>
 <script src="game.js"></script>
 <script src="admin.js"></script>
 </body>

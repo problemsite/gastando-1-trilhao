@@ -6,7 +6,7 @@
 (() => {
   'use strict';
   const D = window.GAMEDATA, M = window.MAPDATA;
-  const LS_STATE = 'trilhao_state_v1', LS_OVR = 'trilhao_overrides_v1', LS_CMD = 'trilhao_cmd_v1', LS_SET = 'trilhao_settings_v1';
+  const LS_STATE = 'trilhao2_state', LS_OVR = 'trilhao2_overrides', LS_CMD = 'trilhao2_cmd', LS_SET = 'trilhao2_settings';
   const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
   const nf = new Intl.NumberFormat('pt-BR');
   const fmtFull = v => 'R$ ' + nf.format(Math.round(v || 0));
@@ -78,7 +78,7 @@
       if (local && window.TRILHAO) { window.TRILHAO.API[cmd](...args); setTimeout(refresh, 60); return; }
       const msg = { cmd, args, nonce: Date.now() + '-' + Math.random() };
       try { localStorage.setItem(LS_CMD, JSON.stringify(msg)); } catch (e) {}
-      try { new BroadcastChannel('trilhao').postMessage(msg); } catch (e) {}
+      try { new BroadcastChannel('trilhao2').postMessage(msg); } catch (e) {}
       setTimeout(refresh, 250);
     };
     const state = () => (local && window.TRILHAO ? window.TRILHAO.state : get(LS_STATE)) || {};

@@ -4,7 +4,7 @@
 (() => {
   'use strict';
   const D = window.GAMEDATA, M = window.MAPDATA;
-  const LS_STATE = 'trilhao_state_v1', LS_OVR = 'trilhao_overrides_v1', LS_CMD = 'trilhao_cmd_v1', LS_SET = 'trilhao_settings_v1';
+  const LS_STATE = 'trilhao2_state', LS_OVR = 'trilhao2_overrides', LS_CMD = 'trilhao2_cmd', LS_SET = 'trilhao2_settings';
   const $ = s => document.querySelector(s);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -317,7 +317,9 @@
     travel() { noise(1.8, { vol: .05, f0: 350, f1: 1500 }); },
     win() { [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, .35, { type: 'triangle', vol: .07, at: i * .11 })); },
     lose() { [392, 330, 262, 196].forEach((f, i) => tone(f, .4, { type: 'sine', vol: .08, at: i * .2 })); },
-    click() { tone(1200, .04, { vol: .03 }); }
+    click() { tone(1200, .04, { vol: .03 }); },
+    whoosh() { noise(.7, { vol: .035, f0: 900, f1: 2600 }); },
+    milestone() { [392, 523, 659, 784].forEach((f, i) => tone(f, .5, { type: 'triangle', vol: .06, at: i * .09 })); tone(98, .6, { vol: .08 }); }
   };
 
   /* ------------------------------------------------------------------ */
@@ -580,70 +582,43 @@
   function banner(html) { if (!html) { bannerEl.classList.remove('on'); return; } bannerEl.innerHTML = html; bannerEl.classList.add('on'); }
 
   /* ------------------------------------------------------------------ */
-  /*  O trilhão físico: 1.000 quadradinhos de R$ 1 bilhão              */
+  /*  O trilhão em 3D (cubo de notas de R$ 100) + bonequinho real       */
   /* ------------------------------------------------------------------ */
-  const COLS = 50, ROWS = 20;
   const MONEY = ['#33c385', '#2fbd7f', '#3ac98b', '#2bb779', '#36c687'];
   const cellColor = i => MONEY[(i * 2654435761 >>> 0) % MONEY.length];
   function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-  function makePile(canvas, opt) {
-    const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
-    const PITCH = opt.pitch, CELL = Math.round(PITCH * 0.8), PERSON = opt.person;
-    const BX = W - (COLS * PITCH - (PITCH - CELL)) - 2, BY = H - (ROWS * PITCH - (PITCH - CELL)) - 2;
-    const removedAt = new Float64Array(COLS * ROWS);
-    const st = { lastFull: null, loop: false, bal: 0, lensCell: -1 };
-    const cellXY = i => { const r = Math.floor(i / COLS), c = i % COLS; return { x: BX + c * PITCH, y: BY + (ROWS - 1 - r) * PITCH }; };
-    function draw(bal) {
-      st.bal = bal;
-      const now = performance.now();
-      const full = Math.floor(bal / 1e9 + 1e-9), frac = bal / 1e9 - full;
-      if (opt.flash && st.lastFull != null && full < st.lastFull) for (let i = full; i < st.lastFull && i < 1000; i++) removedAt[i] = now;
-      if (st.lastFull != null && full > st.lastFull) for (let i = st.lastFull; i < full; i++) removedAt[i] = 0;
-      st.lastFull = full;
-      ctx.clearRect(0, 0, W, H);
-      let flashing = false; const rad = Math.max(2, CELL * .18);
-      for (let i = 0; i < COLS * ROWS; i++) {
-        const { x, y } = cellXY(i);
-        if (i < full) {
-          ctx.fillStyle = cellColor(i); rr(ctx, x, y, CELL, CELL, rad); ctx.fill();
-          ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(x + CELL * .2, y + CELL * .2, CELL * .6, Math.max(1, CELL * .12));
-        } else {
-          const age = now - removedAt[i];
-          if (removedAt[i] && age < 900) {
-            flashing = true;
-            const k = age / 900, s = CELL * (1 - k * .6), o = (CELL - s) / 2;
-            ctx.fillStyle = `rgba(255,176,32,${1 - k * .7})`; rr(ctx, x + o, y + o - k * CELL * .7, s, s, rad); ctx.fill();
-          }
-          ctx.fillStyle = '#e9eef2'; rr(ctx, x, y, CELL, CELL, rad); ctx.fill();
-          if (i === full && frac > 0.0001) {
-            const h = Math.max(1.5, CELL * frac);
-            ctx.save(); rr(ctx, x, y, CELL, CELL, rad); ctx.clip(); ctx.fillStyle = cellColor(i); ctx.fillRect(x, y + CELL - h, CELL, h); ctx.restore();
-          }
-        }
-        if (i === st.lensCell) { ctx.strokeStyle = '#0d1726'; ctx.lineWidth = Math.max(2, PITCH * .15); rr(ctx, x - PITCH * .2, y - PITCH * .2, CELL + PITCH * .4, CELL + PITCH * .4, rad + 2); ctx.stroke(); }
-      }
-      // bonequinho (escala humana)
-      const u = PERSON, px = u * 3, base = H - 4;
-      ctx.strokeStyle = '#0d1726'; ctx.fillStyle = '#0d1726'; ctx.lineWidth = u * .5; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(px, base - u * 7.2, u, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(px, base - u * 6); ctx.lineTo(px, base - u * 2.8);
-      ctx.moveTo(px, base - u * 2.8); ctx.lineTo(px - u, base); ctx.moveTo(px, base - u * 2.8); ctx.lineTo(px + u, base);
-      ctx.moveTo(px - u * 1.4, base - u * 5); ctx.lineTo(px, base - u * 5.5); ctx.lineTo(px + u * 1.4, base - u * 4.5);
-      ctx.stroke();
-      ctx.font = `700 ${Math.round(u * 2.4)}px ` + getComputedStyle(document.body).fontFamily; ctx.fillStyle = '#7a8799'; ctx.textAlign = 'center';
-      ctx.fillText('você', px, base - u * 9.4);
-      if (flashing && !st.loop) { st.loop = true; requestAnimationFrame(() => { st.loop = false; draw(st.bal); }); }
-    }
-    return { draw, st, cellXY, CELL };
+  const FONT = getComputedStyle(document.body).fontFamily;
+  // HUD: canvas 760x420 (exibido 380x210)
+  const hudCube = CUBE.make($('#pile'), { s: 15, ox: 520, oy: 196, human: [1.6, 12.6], inset: [118, 250, 78], insetLabel: 'você', font: FONT });
+  // momento: canvas 1520x1120 (exibido 760x560)
+  const bigCube = CUBE.make($('#bigPile'), { s: 52, ox: 1040, oy: 545, human: [1.6, 12.8], inset: [260, 800, 165], insetLabel: 'você · 1,75 m', font: FONT });
+  let endCube = null;
+  const pileWrap = $('#pileWrap');
+  let hudOpenTimer = null;
+  function hudCubeOpen(ms) {
+    pileWrap.classList.add('open'); clearTimeout(hudOpenTimer);
+    if (ms) hudOpenTimer = setTimeout(() => pileWrap.classList.remove('open'), ms);
   }
-  const hudPile = makePile($('#pile'), { pitch: 15, person: 7, flash: false });
-  const bigPile = makePile($('#bigPile'), { pitch: 26, person: 11, flash: true });
+  $('#moneyBox').addEventListener('click', () => { SFX.click(); if (pileWrap.classList.contains('open')) { pileWrap.classList.remove('open'); clearTimeout(hudOpenTimer); } else hudCubeOpen(12000); });
+  function hudPose() {
+    if (S.ended === 'win') return 'celebrate';
+    if (S.ended === 'lose') return 'sad';
+    if (S.minutes < 1440) return 'worried';
+    if (S.minutes < 2880) return 'watch';
+    return 'idle';
+  }
+  (function loop(now) {
+    if (pileWrap.classList.contains('open')) { hudCube.pose(hudPose()); hudCube.set(shown.balance / 1e9); hudCube.draw(now); }
+    if (!$('#moment').classList.contains('hidden')) bigCube.draw(now);
+    if (endCube && endCube.canvas.isConnected) endCube.draw(now);
+    requestAnimationFrame(loop);
+  })(performance.now());
 
   const lensCv = $('#lensCv'), lctx = lensCv.getContext('2d');
   function drawLens(balBefore, balAfter, price) {
     const k = Math.min(999, Math.floor(balAfter / 1e9 + 1e-9));
     const fAfter = balAfter / 1e9 - k, fBefore = Math.min(1, balBefore / 1e9 - k);
-    bigPile.st.lensCell = k;
+    bigCube.st.hi = k;
     const N = 10, P = 36, C = 32;
     lctx.clearRect(0, 0, 360, 360);
     for (let s = 0; s < 100; s++) {
@@ -652,10 +627,10 @@
       lctx.fillStyle = '#e9eef2'; rr(lctx, x, y, C, C, 5); lctx.fill();
       const seg = (a, b, col) => { const A = Math.max(lo, a), B = Math.min(hi, b); if (B <= A) return; const h0 = (A - lo) * 100 * C, h1 = (B - lo) * 100 * C; lctx.save(); rr(lctx, x, y, C, C, 5); lctx.clip(); lctx.fillStyle = col; lctx.fillRect(x, y + C - h1, C, h1 - h0); lctx.restore(); };
       seg(0, fAfter, cellColor(s));
-      seg(fAfter, fBefore, '#ffb020');
+      seg(fAfter, fBefore, '#e5484d');
     }
     const parts = price / 1e7;
-    $('#lensCap').innerHTML = `− ${fmtShort(price)}<small>= ${trimNum(parts, parts < 1 ? 2 : 1)} de 100 pedacinhos de UM quadradinho</small>`;
+    $('#lensCap').innerHTML = `− ${fmtShort(price)}<small>= ${trimNum(parts, parts < 1 ? 2 : 1)} de 100 pedacinhos de UM bloco</small>`;
   }
 
   /* ------------------------------------------------------------------ */
@@ -676,18 +651,19 @@
     const spent = Math.max(0, D.START_BALANCE - shown.balance);
     $('#leftPct').textContent = fmtLeftPct(shown.balance) + ' restante';
     $('#spentValue').textContent = spent > 0 ? fmtShort(spent) + ' gastos' : 'nada gasto ainda';
-    hudPile.draw(shown.balance);
   }
   function paintTime() { $('#timeValue').textContent = fmtRemain(shown.minutes); }
   function paintTop() { paintMoney(); paintTime(); }
-  function paintTopStatic() {
-    const elapsed = D.START_MINUTES - S.minutes;
+  function paintTopStatic(mins) {
+    const M_ = mins == null ? S.minutes : mins;
+    const elapsed = D.START_MINUTES - M_;
     [...dayPills.children].forEach((p, i) => p.firstChild.style.transform = `scaleX(${clamp((elapsed - i * 1440) / 1440, 0, 1)})`);
     const tb = $('#timeBox'); tb.classList.remove('warn', 'danger');
     let u = '';
-    if (S.minutes < 1440) { tb.classList.add('danger'); u = 'Menos de 1 dia!'; }
-    else if (S.minutes < 2880) { tb.classList.add('warn'); u = 'Reta final'; }
+    if (M_ < 1440) { tb.classList.add('danger'); u = 'Menos de 1 dia!'; }
+    else if (M_ < 2880) { tb.classList.add('warn'); u = 'Reta final'; }
     $('#urgency').textContent = u;
+    $('#vignette').classList.toggle('on', S.minutes < 1440 && S.minutes > 0 && !S.ended);
     const c = cityOf(S.city); $('#locName').textContent = `${c.name}, ${countryName(c.country)}`;
   }
   function tween(ms, fn, easing) {
@@ -834,6 +810,7 @@
     else if (tooLong) alerts = `<div class="alert danger">${icon('clock')}<span>Não dá pra concluir dentro do prazo. Você só tem ${fmtRemain(S.minutes)}.</span></div>`;
     const tag = a.remote ? '<span class="tag remote">COMPRA REMOTA</span>' : (t.kind === 'intl' || t.kind === 'domestic' ? '<span class="tag need">PRECISA IR ATÉ LÁ</span>' : '<span class="tag">PRESENCIAL</span>');
     openModal(`<div class="${a.flex ? 'is-flex' : ''}">
+      <div class="c-art">${ART.svg(a.cat, { obra: a.tier === 'obra' })}</div>
       <div class="c-title"><span class="c-ico">${icon(a.cat)}</span>${esc(a.name)}</div>
       <div class="big3">
         <div class="price">${bigMoney(q.price)}<small>${fmtFull(q.price)} · ${fmtPct(q.price / D.START_BALANCE * 100)} do trilhão</small></div>
@@ -877,7 +854,7 @@
   }
   function showOwned(a, alt) {
     current = null;
-    openModal(`<div class="owned"><div class="c-title"><span class="c-ico">${icon(a.cat)}</span>${esc(a.name)}</div>
+    openModal(`<div class="owned"><div class="c-art dim">${ART.svg(a.cat, { obra: a.tier === 'obra' })}<span class="own-stamp">JÁ É SEU</span></div><div class="c-title"><span class="c-ico">${icon(a.cat)}</span>${esc(a.name)}</div>
       <div class="block-title">VOCÊ JÁ É DONO DISSO.</div><div class="block-msg">Comprar de novo seria pagar pra você mesmo.</div>
       <div class="btns">${alt ? `<button class="btn btn-buy" id="altBtn">QUE TAL: ${esc((alt.short || alt.name).toUpperCase())}?</button>` : ''}<button class="btn ${alt ? 'btn-ghost' : 'btn-dark'}" id="okBtn">${alt ? 'NÃO' : 'TENTAR OUTRA COISA'}</button></div></div>`);
     bindOk();
@@ -960,9 +937,11 @@
     floatLabel(a.city, '− ' + fmtShort(q.price).toUpperCase());
     renderHistory();
     await animateMoneyTo(S.balance, 900);
+    hudCubeOpen(12000);
     await wait(SET.skipAnim ? 50 : 1500);
     if (g) { g.dataset.s = 0.85; g.style.transition = 'transform .6s cubic-bezier(.3,1.3,.5,1)'; placeMarker(g); }
     await animateView(worldView(), 1500);
+    await milestoneCheck(balBefore, S.balance);
     SET.skipAnim = prevSkip;
     busy = false;
     input.value = ''; input.focus();
@@ -970,36 +949,72 @@
   }
 
   async function moneyMoment(a, price, balBefore, balAfter) {
-    const mo = $('#moment'), moV = $('#moV'), moR = $('#moR'), next = $('#moNext'), lens = $('#moLens');
-    mo.classList.remove('hidden', 'out'); moR.classList.remove('on'); next.classList.remove('on');
+    const mo = $('#moment'), moV = $('#moV'), moR = $('#moR'), next = $('#moNext'), lens = $('#moLens'), cmp = $('#moCmp');
+    const city = cityOf(a.city);
+    $('#moArt').innerHTML = `<div class="art">${ART.svg(a.cat, { obra: a.tier === 'obra' })}</div><div class="nm">${esc(shortName(a))}</div><div class="pl">${esc(placeName(city))}</div>`;
+    mo.classList.remove('hidden', 'out'); moR.classList.remove('on'); next.classList.remove('on'); cmp.classList.remove('on');
+    cmp.innerHTML = a.compare ? esc(a.compare) : '';
     $('#moK').textContent = a.tier === 'obra' ? 'VOCÊ PAGOU ADIANTADO' : 'VOCÊ GASTOU';
-    bigPile.st.lastFull = null; bigPile.st.lensCell = -1; bigPile.draw(balBefore);
+    const B0 = balBefore / 1e9, B1 = balAfter / 1e9;
+    bigCube.st.hi = -1; bigCube.st.lift = 0; bigCube.set(B0); bigCube.pose('point');
+    lens.classList.add('hidden');
     moV.textContent = 'R$ 0';
     const small = price < 1e9;
-    if (small) { drawLens(balBefore, balAfter, price); lens.classList.add('hidden'); } else lens.classList.add('hidden');
-    await wait(SET.skipAnim ? 0 : 500);
+    await wait(SET.skipAnim ? 0 : 600);
+    // 1) conta o valor e marca de VERMELHO a fatia do cubo que vai sair
     const dur = SET.skipAnim ? 0 : clamp(1800 + Math.log10(Math.max(price, 1e6) / 1e6) * 450, 1800, 3600);
     let last = 0;
     await tween(dur, t => {
       moV.textContent = fmtFull(price * t);
-      bigPile.draw(balBefore - (balBefore - balAfter) * t);
+      bigCube.set(B0 - (B0 - B1) * t, B0);
       shown.balance = balBefore - (balBefore - balAfter) * t; paintMoney();
       const now = performance.now(); if (now - last > 110 && t < .98) { SFX.tick(); last = now; }
     }, t => 1 - Math.pow(1 - t, 2.2));
     moV.textContent = fmtFull(price);
-    if (small) { bigPile.draw(balAfter); lens.classList.remove('hidden'); }
-    await wait(SET.skipAnim ? 0 : 500);
+    bigCube.set(B1, B0);
+    bigCube.pose(price >= 50e9 ? 'wow' : small ? 'shrug' : 'point');
+    if (small) { drawLens(balBefore, balAfter, price); lens.classList.remove('hidden'); }
+    await wait(SET.skipAnim ? 0 : 1100);
+    // 2) a parte vermelha sobe e some… e o cubo se reorganiza
+    if (!small) { SFX.whoosh(); await tween(SET.skipAnim ? 0 : 900, t => { bigCube.st.lift = t; }, t => t * t); }
+    bigCube.st.lift = 0; bigCube.set(B1);
     const left = fmtLeftPct(balAfter);
     moR.innerHTML = balAfter <= SET.winThreshold ? 'E NÃO SOBROU NADA.' : `ainda restam <span>${fmtFull(balAfter)}</span> · ${left}`;
     moR.classList.add('on');
-    await wait(SET.skipAnim ? 0 : 700);
+    if (a.compare) { await wait(SET.skipAnim ? 0 : 600); cmp.classList.add('on'); }
+    await wait(SET.skipAnim ? 0 : 900);
+    if (!small) bigCube.pose(balAfter <= SET.winThreshold ? 'celebrate' : 'idle');
     next.textContent = SET.advance === 'auto' ? '' : 'clique para continuar ▸';
     next.classList.add('on');
-    await waitAdvance(4500);
+    await waitAdvance(a.compare ? 6500 : 4500);
     mo.classList.add('out');
     await wait(SET.skipAnim ? 0 : 450);
-    mo.classList.add('hidden'); mo.classList.remove('out'); lens.classList.add('hidden'); bigPile.st.lensCell = -1;
+    mo.classList.add('hidden'); mo.classList.remove('out'); lens.classList.add('hidden'); bigCube.st.hi = -1;
   }
+
+  /* ------------------------------------------------------------------ */
+  /*  Marcos de porcentagem (alinhados com o roteiro)                   */
+  /* ------------------------------------------------------------------ */
+  async function milestoneCheck(balBefore, balAfter) {
+    if (!D.MILESTONES || balAfter <= SET.winThreshold) return;
+    S.milestones = S.milestones || [];
+    const p0 = (D.START_BALANCE - balBefore) / D.START_BALANCE * 100, p1 = (D.START_BALANCE - balAfter) / D.START_BALANCE * 100;
+    const crossed = D.MILESTONES.filter(m => p0 < m.p && p1 >= m.p && !S.milestones.includes(m.p));
+    if (!crossed.length) return;
+    crossed.forEach(m => S.milestones.push(m.p)); save();
+    const m = crossed[crossed.length - 1];
+    const box = $('#milestone');
+    $('#msT').textContent = m.title; $('#msS').innerHTML = `${esc(m.sub || '')} <b>${fmtShort(D.START_BALANCE - balAfter)} gastos · ${fmtShort(balAfter)} restantes</b>`;
+    const bar = $('#msBar'); bar.style.transition = 'none'; bar.style.width = Math.min(100, p0) + '%';
+    box.classList.remove('hidden', 'out');
+    void bar.offsetWidth; bar.style.transition = ''; bar.style.width = Math.min(100, p1) + '%';
+    SFX.milestone();
+    await waitAdvance(3800);
+    box.classList.add('out');
+    await wait(SET.skipAnim ? 0 : 500);
+    box.classList.add('hidden'); box.classList.remove('out');
+  }
+  $('#milestone').addEventListener('click', advance);
 
   /* ------------------------------------------------------------------ */
   /*  Fim de jogo                                                       */
@@ -1021,18 +1036,69 @@
       <div><small>MENOR COMPRA</small><b>${prices.length ? fmtShort(Math.min(...prices)) : '—'}</b></div>
       <div><small>TOTAL GASTO</small><b>${fmtShort(D.START_BALANCE - S.balance)}</b></div></div>`;
   }
-  function endGame(kind, silent) {
-    S.ended = kind; save();
-    if (kind === 'win') {
-      showOverlay(`<div class="modal win"><div class="kicker">VOCÊ CONSEGUIU</div><h1 class="win-num">${fmtFull(D.START_BALANCE - S.balance)}</h1><div class="win-sub">GASTOS</div>
-        <p>Um trilhão de reais, gasto em menos de uma semana.</p>${statsGrid()}</div>`);
-      if (!silent) { SFX.win(); confetti(); }
-    } else {
-      showOverlay(`<div class="modal lose"><div class="kicker">O TEMPO ACABOU</div><h1>Você não conseguiu.</h1>
-        <div class="big">Saldo restante: ${fmtFull(S.balance)}</div>
-        <p>Você tinha ${fmtWords(S.balance)} e não conseguiu gastar a tempo.</p>${statsGrid()}</div>`);
-      if (!silent) SFX.lose();
+  let replaying = false, replaySkip = false;
+  async function replay() {
+    if (SET.skipAnim || !S.history.length) return;
+    replaying = true; replaySkip = false;
+    const skip = () => { replaySkip = true; };
+    stage.addEventListener('click', skip, { once: true });
+    Ldots.innerHTML = ''; Lroute.innerHTML = ''; Lfx.innerHTML = '';
+    drawCurrentMarker(); Lmark.innerHTML = '';
+    await animateView(worldView(), 1200);
+    const n = S.history.length, per = clamp(9500 / n, 260, 900);
+    const perCity = {}; let spent = 0, mins = 0;
+    banner(`REPLAY · <b>7 DIAS EM 10 SEGUNDOS</b>`);
+    for (let i = 0; i < n && !replaySkip; i++) {
+      const h = S.history[i];
+      if (h.from && h.to && h.from !== h.to) {
+        const p = el('path', { d: curvePath(cityOf(h.from), cityOf(h.to)).d, class: 'route-done' }, Lroute);
+        const L = p.getTotalLength(); p.style.strokeDasharray = `${L} ${L}`; p.style.strokeDashoffset = L;
+        await tween(per * 0.55, t => { p.style.strokeDashoffset = L * (1 - t); }, easeInOut);
+        p.style.strokeDasharray = ''; p.style.strokeDashoffset = '';
+      }
+      if (h.city && cityOf(h.city)) {
+        const k = perCity[h.city] = (perCity[h.city] == null ? 0 : perCity[h.city] + 1);
+        const g = drawBadge(Ldots, h, k, true);
+        setTimeout(() => { g.dataset.s = 0.85; g.style.transition = 'transform .4s ease'; placeMarker(g); }, per * 0.6);
+      }
+      spent += h.price; mins += h.minutes;
+      shown.balance = D.START_BALANCE - spent; shown.minutes = D.START_MINUTES - mins; paintTop(); paintTopStatic(shown.minutes);
+      banner(`REPLAY · DIA ${Math.min(7, Math.floor(mins / 1440) + 1)} · <b>${esc((h.short || h.name).toUpperCase())}</b>`);
+      tone(700 + i * 40, .08, { type: 'triangle', vol: .04 });
+      await wait(per * 0.45);
     }
+    stage.removeEventListener('click', skip);
+    banner(null);
+    shown.balance = S.balance; shown.minutes = S.minutes; paintTop(); paintTopStatic();
+    renderMapLayers();
+    await wait(replaySkip ? 100 : 700);
+    replaying = false;
+  }
+
+  function receiptHtml() {
+    const h = S.history, dense = h.length > 22 ? ' dense' : '';
+    const items = h.map((x, i) => `<li style="animation-delay:${(0.35 + i * 0.09).toFixed(2)}s"><span class="n">${i + 1}. ${esc(x.short || x.name)}</span><span class="d"></span><b>${esc(fmtShort(x.price))}</b></li>`).join('');
+    const end = 0.35 + h.length * 0.09;
+    return `<div class="receipt${dense}"><h3>RECIBO</h3><div class="rd">GASTE 1 TRILHÃO EM 7 DIAS · ${h.length} ITENS</div>
+      <ol>${items}</ol>
+      <div class="tot" style="animation:printIn .4s ${end.toFixed(2)}s both"><span>TOTAL</span><b>${fmtFull(D.START_BALANCE - S.balance)}</b></div>
+      ${S.balance > SET.winThreshold ? `<div class="tot left" style="animation:printIn .4s ${(end + .2).toFixed(2)}s both"><span>NÃO GASTO</span><b>${fmtFull(S.balance)}</b></div>` : ''}</div>`;
+  }
+  async function endGame(kind, silent) {
+    S.ended = kind; save();
+    paintTopStatic(); pileWrap.classList.remove('open');
+    if (!silent) await replay();
+    const win = kind === 'win';
+    const used = D.START_MINUTES - S.minutes;
+    showOverlay(`<div class="final ${win ? 'win' : 'lose'}"><div class="f-left">
+      <div class="kicker">${win ? 'VOCÊ CONSEGUIU' : 'O TEMPO ACABOU'}</div>
+      <h1>${win ? fmtFull(D.START_BALANCE - S.balance) : 'Você não conseguiu.'}</h1>
+      <div class="sub">${win ? `gastos em ${fmtRemain(used)} — o cubo de 22 metros sumiu.` : `Sobraram ${fmtFull(S.balance)} no cubo.`}</div>
+      <canvas id="endCv" width="1240" height="720"></canvas>
+      ${statsGrid()}</div>${receiptHtml()}</div>`);
+    endCube = CUBE.make($('#endCv'), { s: 30, ox: 760, oy: 372, human: [1.6, 12.8], inset: [190, 440, 130], insetLabel: 'você', font: FONT });
+    endCube.set(S.balance / 1e9); endCube.pose(win ? 'celebrate' : 'sad');
+    if (!silent) { if (win) { SFX.win(); confetti(); } else SFX.lose(); }
   }
   const ov = $('#overlay');
   function showOverlay(html, closable) {
@@ -1138,7 +1204,7 @@
     if (e.key === LS_OVR) OVR = store.get(LS_OVR) || {};
     if (e.key === LS_SET) SET = Object.assign(SET, store.get(LS_SET) || {});
   });
-  try { const bc = new BroadcastChannel('trilhao'); bc.onmessage = ev => { const c = ev.data; if (c && c.nonce !== lastCmd) { lastCmd = c.nonce; run(c); } }; } catch (e) {}
+  try { const bc = new BroadcastChannel('trilhao2'); bc.onmessage = ev => { const c = ev.data; if (c && c.nonce !== lastCmd) { lastCmd = c.nonce; run(c); } }; } catch (e) {}
 
   window.TRILHAO = {
     API, run, interpret, suggestions, quote: (id, b) => quote(getAction(id), b), getAction,

@@ -94,15 +94,15 @@
   add({ id: 'ny_arranhaceu', country: 'US', city: 'nova_york', cat: 'building', tier: 'imovel', price: 12 * BI, hours: 5,
     name: 'Um arranha-céu inteiro em Manhattan', short: 'Arranha-céu em NY', hint: '🏙️ um arranha-céu inteiro',
     aliases: ['arranha-céu', 'um arranha céu', 'prédio em nova york', 'arranha céu em nova york', 'um prédio', 'torre em manhattan'],
-    keys: ['arranha', 'manhattan', 'york', 'prédio', 'predio', 'torre'], msg: 'Seu nome agora está no topo de um arranha-céu em Nova York.' });
-  add({ id: 'nba', country: 'US', city: 'nova_york', cat: 'trophy', tier: 'clube', price: 33 * BI, hours: 8,
+    keys: ['arranha', 'manhattan', 'york', 'prédio', 'predio', 'torre'], compare: 'Empilhando em notas de R$ 100, daria uma pilha de 12 km de altura.', msg: 'Seu nome agora está no topo de um arranha-céu em Nova York.' });
+  add({ id: 'nba', country: 'US', city: 'nova_york', cat: 'trophy', tier: 'clube', price: 35 * BI, hours: 8,
     name: 'Um time da NBA', short: 'Time da NBA', hint: '🏀 um time da NBA',
     aliases: ['time da nba', 'time de basquete', 'franquia da nba', 'nba', 'knicks', 'lakers'],
-    keys: ['nba', 'basquete', 'knicks', 'lakers'], msg: 'Você agora tem um time da NBA. E a camisa 1 é sua.' });
+    keys: ['nba', 'basquete', 'knicks', 'lakers'], compare: 'Contando uma nota de R$ 100 por segundo, sem parar, você levaria 11 anos.', msg: 'Você agora tem um time da NBA. E a camisa 1 é sua.' });
   add({ id: 'vegas', country: 'US', city: 'las_vegas', cat: 'casino', tier: 'empresa', price: 140 * BI, hours: 20,
     name: 'Metade dos cassinos de Las Vegas', short: 'Las Vegas', hint: '🎰 metade de Las Vegas',
     aliases: ['cassinos de las vegas', 'las vegas', 'cassinos', 'um cassino', 'a strip de las vegas', 'resorts de las vegas'],
-    keys: ['vegas', 'cassino', 'casino', 'strip'], msg: 'Metade de Las Vegas é sua. A banca sempre ganha — e a banca é você.' });
+    keys: ['vegas', 'cassino', 'casino', 'strip'], compare: 'Gastando R$ 1 milhão por dia, você levaria 383 anos.', msg: 'Metade de Las Vegas é sua. A banca sempre ganha — e a banca é você.' });
   add({ id: 'obra_parque', country: 'US', city: 'orlando', cat: 'park', tier: 'obra',
     flex: { min: 10 * BI, max: 120 * BI, options: [10 * BI, 30 * BI, 60 * BI, 120 * BI], base: 5, k: 0.8 },
     name: 'Começar a obra de um parque temático gigante', short: 'Obra do parque', hint: '🎢 a obra de um parque temático',
@@ -119,7 +119,7 @@
   add({ id: 'nike', country: 'US', city: 'portland', cat: 'company', tier: 'empresa', price: 520 * BI, hours: 30,
     name: 'O controle da Nike', short: 'Nike', hint: '👟 uma marca esportiva gigante',
     aliases: ['a nike', 'nike', 'marca de tênis', 'empresa de tênis'],
-    keys: ['nike', 'tênis', 'tenis'], msg: 'Just do it. Você fez.' });
+    keys: ['nike', 'tênis', 'tenis'], compare: 'Contando uma nota de R$ 100 por segundo, você levaria 165 anos.', msg: 'Just do it. Você fez.' });
   add({ id: 'mcdonalds', country: 'US', city: 'chicago', cat: 'company', tier: 'empresa', price: 1.15 * TRI, hours: 40,
     name: "O McDonald's", short: "McDonald's", hint: '🍔 a maior rede de fast food',
     aliases: ["o mcdonald's", 'mcdonalds', 'mc donalds', 'o méqui', 'mequi', 'rede de fast food'],
@@ -139,7 +139,7 @@
   add({ id: 'premier', country: 'GB', city: 'londres', cat: 'trophy', tier: 'clube', price: 25 * BI, hours: 8,
     name: 'Um clube gigante da Premier League', short: 'Clube inglês', hint: '⚽ um gigante do futebol inglês',
     aliases: ['time de futebol', 'um time de futebol', 'um clube', 'clube de futebol', 'time da premier league', 'um time inglês', 'clube europeu'],
-    keys: ['futebol', 'clube', 'time', 'premier', 'chelsea', 'manchester', 'arsenal', 'liverpool'], msg: 'Você agora é dono de um gigante do futebol europeu.' });
+    keys: ['futebol', 'clube', 'time', 'premier', 'chelsea', 'manchester', 'arsenal', 'liverpool'], compare: 'Gastando R$ 1 milhão por dia, você levaria 68 anos pra gastar isso.', msg: 'Você agora é dono de um gigante do futebol europeu.' });
   add({ id: 'f1', country: 'GB', city: 'londres', cat: 'car', tier: 'clube', price: 22 * BI, hours: 8,
     name: 'Uma equipe de Fórmula 1', short: 'Equipe de F1', hint: '🏁 uma equipe de Fórmula 1',
     aliases: ['equipe de f1', 'time de fórmula 1', 'fórmula 1', 'f1', 'equipe de fórmula um'],
@@ -175,7 +175,7 @@
   add({ id: 'ferrari', country: 'IT', city: 'maranello', cat: 'company', tier: 'empresa', price: 480 * BI, hours: 24,
     name: 'A Ferrari (empresa inteira)', short: 'Ferrari (empresa)', hint: '🏎️ uma montadora lendária',
     aliases: ['a ferrari', 'a ferrari inteira', 'empresa ferrari', 'a montadora ferrari', 'a marca ferrari', 'fábrica da ferrari'],
-    keys: ['ferrari', 'montadora', 'fabricante'], msg: 'Você não comprou uma Ferrari. Você comprou A Ferrari.' });
+    keys: ['ferrari', 'montadora', 'fabricante'], compare: 'Em notas de R$ 100, isso é um cubo de 17 metros de altura.', msg: 'Você não comprou uma Ferrari. Você comprou A Ferrari.' });
   add({ id: 'megaiate', country: 'IT', city: 'genova', cat: 'yacht', tier: 'gigante', price: 3.5 * BI, hours: 6,
     name: 'Um megaiate de 140 metros', short: 'Megaiate', hint: '🛥️ estaleiros de megaiates',
     aliases: ['megaiate', 'iate gigante', 'um iate', 'iate', 'superiate', 'barco gigante', 'o maior iate'],
@@ -229,7 +229,7 @@
   add({ id: 'nintendo', country: 'JP', city: 'kyoto', cat: 'game', tier: 'empresa', price: 440 * BI, hours: 24,
     name: 'A Nintendo', short: 'Nintendo', hint: '🎮 uma empresa de videogame lendária',
     aliases: ['a nintendo', 'nintendo', 'empresa de videogame', 'o mario', 'pokemon'],
-    keys: ['nintendo', 'mario', 'pokemon', 'pokémon', 'videogame'], msg: 'Você é o novo dono do Mario. Ele ainda não sabe.' });
+    keys: ['nintendo', 'mario', 'pokemon', 'pokémon', 'videogame'], compare: 'Em notas de R$ 100, isso pesa umas 4.400 toneladas.', msg: 'Você é o novo dono do Mario. Ele ainda não sabe.' });
   add({ id: 'trens_jp', country: 'JP', city: 'toquio', cat: 'train', tier: 'gigante', price: 30 * BI, hours: 8,
     name: 'Uma frota inteira de trens-bala', short: 'Frota de trens-bala', hint: '🚅 uma frota de trens-bala',
     aliases: ['trens bala', 'frota de trens', 'trens-bala', 'shinkansen', 'trens'],
@@ -303,8 +303,19 @@
   // dicas de bloqueios por país (aparecem no hover, riscadas)
   const BLOCK_HINTS = { BR: '🚫 Cristo e Maracanã (não vendem)', US: '🚫 Disney e big techs (grandes demais)', FR: '🚫 Torre Eiffel', IT: '🚫 Coliseu', RU: '🚫 sanções: nada à venda', EG: '🚫 Pirâmides', GB: '🚫 a Coroa' };
 
+  // marcos de porcentagem (faixa grande na tela quando o gasto passa deles)
+  const MILESTONES = [
+    { p: 1, title: '1% DO TRILHÃO', sub: 'O primeiro centésimo. Ainda falta quase tudo.' },
+    { p: 5, title: '5% DO TRILHÃO', sub: 'Um vigésimo do cubo já foi embora.' },
+    { p: 10, title: '10% DO TRILHÃO', sub: 'Um décimo gasto. Agora é escala de empresa.' },
+    { p: 25, title: 'UM QUARTO DO TRILHÃO', sub: 'Um quarto do cubo de notas desapareceu.' },
+    { p: 50, title: 'METADE DO TRILHÃO', sub: 'Meio trilhão gasto. O cubo finalmente encolheu.' },
+    { p: 75, title: '75% DO TRILHÃO', sub: 'Só resta o último quarto.' },
+    { p: 90, title: 'SÓ FALTAM 10%', sub: 'Reta final do dinheiro.' }
+  ];
+
   window.GAMEDATA = {
-    ACTIONS: A, TIERS, BLOCK_HINTS,
+    ACTIONS: A, TIERS, BLOCK_HINTS, MILESTONES,
     START_BALANCE: 1e12,
     START_MINUTES: 7 * 24 * 60,
     START_CITY: 'rio',
